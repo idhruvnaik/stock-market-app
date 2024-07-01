@@ -2,10 +2,10 @@ require('dotenv').config();
 
 module.exports = {
   development: {
-    username: "dhruvnaik",
-    password: "dnaff",
-    database: "angel-one-development",
-    host: "localhost",
+    username: "postgres",
+    password: "dnaff97devlopment",
+    database: "stock-market-app-development",
+    host: "stock-market-app-development.c9kyq24i6e1d.ap-south-1.rds.amazonaws.com",
     dialect: 'postgres',
   },
   test: {
