@@ -10,6 +10,6 @@ const symbols = async (_, res) => {
     }
   };
 
-const isFUTSymbol = (quote) => quote.exch_seg == 'NFO' && quote.instrumenttype == 'FUTSTK'
+const isFUTSymbol = (symbol) => symbol.exch_seg == 'NFO' && symbol.instrumenttype == 'FUTSTK'
 
 module.exports = { symbols }
