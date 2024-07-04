@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const authRoutes = require('./routes/authRoutes');
 const userRoute = require('./routes/userRoutes');
+const masterRoutes = require('./routes/masterRoutes');
 
 const errorMiddleware = require('./middlewares/errorMiddleware');
 
@@ -10,6 +11,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use('/auth', authRoutes);
 app.use('/user', userRoute);
+app.use('/master', masterRoutes);
 app.use(errorMiddleware);
 
 app.get('/', (req, res) => {
