@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const authRoutes = require('./routes/authRoutes');
 const userRoute = require('./routes/userRoutes');
 const masterRoutes = require('./routes/masterRoutes');
+const watchListRoutes = require('./routes/watchListRoutes');
 
 const errorMiddleware = require('./middlewares/errorMiddleware');
 
@@ -12,6 +13,7 @@ app.use(bodyParser.json());
 app.use('/auth', authRoutes);
 app.use('/user', userRoute);
 app.use('/master', masterRoutes);
+app.use('/watch_list', watchListRoutes);
 app.use(errorMiddleware);
 
 app.get('/', (req, res) => {
