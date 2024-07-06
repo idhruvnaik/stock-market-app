@@ -23,6 +23,6 @@ const symbols = async (_, res) => {
   }
 };
 
-const filterSymbol = (symbol) => symbol.exch_seg == 'NFO' && symbol.instrumenttype == 'FUTSTK'
+const isFUTSymbol = (symbol) => symbol.exch_seg == 'NFO' && symbol.instrumenttype == 'FUTSTK'
 
 module.exports = { symbols }
