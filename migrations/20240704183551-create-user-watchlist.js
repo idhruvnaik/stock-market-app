@@ -14,15 +14,23 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      user_id: {
-        type: Sequelize.INTEGER,
+      user_token: {
+        type: Sequelize.STRING,
         allowNull: false,
         references: {
           model: 'users',
-          key: 'id',
+          key: 'unique_token',
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
+      },
+      symbol_token: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      symbol_raw_data: {
+        type: Sequelize.JSONB,
+        allowNull: false
       },
       createdAt: {
         allowNull: false,
@@ -34,12 +42,6 @@ module.exports = {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
       },
-    });
-
-    // Add the unique composite index
-    await queryInterface.addIndex("user_watchlists", ["user_id", "symbol"], {
-      unique: true,
-      name: "unique_user_symbol",
     });
   },
 

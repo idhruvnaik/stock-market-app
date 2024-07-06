@@ -7,24 +7,42 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      user_id: {
-        type: DataTypes.INTEGER,
+      user_token: {
+        type: DataTypes.STRING,
         allowNull: false,
         references: {
           model: "users",
-          key: "id",
+          key: "unique_token",
         },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
+      symbol_token: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      symbol_raw_data: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+      },
     },
     {
-      tableName: "user_watchlists", // explicitly set the table name if different
+      tableName: "user_watchlists",
+      indexes: [
+        {
+          unique: true,
+          fields: ["user_token", "symbol"],
+        },
+      ],
     }
   );
 
   UserWatchList.associate = (models) => {
-    UserWatchList.belongsTo(models.User, { foreignKey: "user_id", as: "user" });
+    UserWatchList.belongsTo(models.User, {
+      foreignKey: "user_token",
+      as: "user",
+      sourceKey: "unique_token",
+    });
   };
 
   return UserWatchList;

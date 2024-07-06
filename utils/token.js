@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 
 const generateAccessToken = async(user) => {
     try {
-        const payload = { username: user?.username, password: user?.password };
+        const payload = { unique_token: user?.unique_token };
         
         const accessToken = jwt.sign(
             payload,
@@ -18,7 +18,7 @@ const generateAccessToken = async(user) => {
 
 const generateRefreshToken = async(user) => {
     try {
-        const payload = { username: user?.username, password: user?.password };
+        const payload = { unique_token: user?.unique_token };
         const refreshToken = jwt.sign(
             payload,
             process.env.REFRESH_TOKEN_PRIVATE_KEY,
