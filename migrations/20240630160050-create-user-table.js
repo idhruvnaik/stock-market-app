@@ -19,6 +19,16 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
+      unique_token: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      status: {
+        type: Sequelize.ENUM,
+        allowNull: false,
+        values: ["active", "inactive"],
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

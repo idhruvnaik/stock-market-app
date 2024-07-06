@@ -8,7 +8,7 @@ const register = async (req, res) => {
     const { username, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await db.User.create({ username, password: hashedPassword });
-    res.status(201).json({ user: { id: user.id, username: user.username } });
+    res.status(201).json({ user: { unique_token: user?.unique_token } });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -40,7 +40,7 @@ const verifyRefreshToken = async(req, res) => {
     if(result?.error) {
       return res.status(401).json({ message: "Unauthorized!!!!" });
     }else{
-      const { accessToken } = await tokens.generateAccessToken({ username: result?.username, password: result?.password });
+      const { accessToken } = await tokens.generateAccessToken({ unique_token: user?.unique_token });
       return res.status(200).json({ accessToken: accessToken });
     }
   } catch (error) {
