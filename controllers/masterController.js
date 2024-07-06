@@ -1,5 +1,5 @@
 var LocalStorage = require('node-localstorage').LocalStorage;
-localStorage = new LocalStorage('../storage');
+localStorage = new LocalStorage('./storage');
 
 const symbols = async (_, res) => {
   try {
