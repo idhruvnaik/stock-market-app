@@ -35,12 +35,12 @@ const login = async (req, res) => {
 const verifyRefreshToken = async(req, res) => {
   try {
     const { refreshToken } = req.body;
-    const result = await tokens.verifyRefreshToken(refreshToken);    
+    const result = await tokens.verifyRefreshToken(refreshToken);
 
     if(result?.error) {
       return res.status(401).json({ message: "Unauthorized!!!!" });
     }else{
-      const { accessToken } = await tokens.generateAccessToken({ unique_token: user?.unique_token });
+      const { accessToken } = await tokens.generateAccessToken({ unique_token: result?.unique_token });
       return res.status(200).json({ accessToken: accessToken });
     }
   } catch (error) {
