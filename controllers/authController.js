@@ -40,7 +40,7 @@ const verifyRefreshToken = async(req, res) => {
     if(result?.error) {
       return res.status(401).json({ message: "Unauthorized!!!!" });
     }else{
-      const { accessToken } = await tokens.generateAccessToken({ unique_token: result?.unique_token });
+      const { accessToken } = await tokens.generateAccessToken({ unique_token: result?.tokenDetails?.unique_token });
       return res.status(200).json({ accessToken: accessToken });
     }
   } catch (error) {
