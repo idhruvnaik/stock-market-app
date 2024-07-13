@@ -21,8 +21,8 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      symbol_raw_data: {
-        type: DataTypes.JSONB,
+      order: {
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
     },

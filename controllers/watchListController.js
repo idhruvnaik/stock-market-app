@@ -1,4 +1,5 @@
 const db = require("../models");
+
 const list = async (req, res) => {
   try {
     const unique_token = req?.user?.tokenDetails?.unique_token;
@@ -8,6 +9,7 @@ const list = async (req, res) => {
         {
           model: db.UserWatchList,
           as: "watchlist",
+          order: [["order", "ASC"]],
         },
       ],
     });
@@ -56,4 +58,36 @@ const remove = async (req, res) => {
   }
 };
 
-module.exports = { list, add, remove };
+const setOrder = async (req, res) => {
+  try {
+    const unique_token = req?.user?.tokenDetails?.unique_token;
+    watchlists = req?.body?.watchlists || [];
+
+    const t = await db.sequelize.transaction();
+    watchlists?.forEach(async (element, index) => {
+      if (element) {
+        const watchListItem = await db.UserWatchList.findOne({
+          where: {
+            user_token: unique_token,
+            symbol_token: element?.symbol_token,
+          },
+        });
+
+        if (!watchListItem) {
+          throw new Error("WatchList item not found");
+        }
+
+        console.log(watchListItem);
+        await watchListItem.update({ order: index });
+      }
+    });
+
+    await t.commit();
+    res.status(200).json({ message: "Order Updated Successfuly!!" });
+  } catch (error) {
+    await t.rollback();
+    res.status(400).json({ message: error.message });
+  }
+};
+
+module.exports = { list, add, remove, setOrder };
