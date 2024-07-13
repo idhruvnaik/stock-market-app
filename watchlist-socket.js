@@ -80,17 +80,42 @@ watchlistWS.on("connection", async (ws, req) => {
   const token = location.query.token;
 
   try {
-    const decoded = await tokenUtil?.verifyAccessToken(token);
-    ws.client = decoded;
+    const data = await tokenUtil?.verifyAccessToken(token);
+    ws.client = data;
+    await updateClientObserver(ws, data);
+
     ws.on("close", () => {
-      console.log("Closed..");
+      console.log("Closed......");
     });
   } catch (error) {
     ws.send(JSON.stringify({ error: "Unauthorized" }));
-    ws.close(1002, "Unauthorized"); // Protocol Error
+    ws.close(1002, "Unauthorized");
     return;
   }
 });
+
+async function updateClientObserver(ws, data) {
+  let tokens = await db.UserWatchList.findAll({
+    where: {
+      user_token: data["tokenDetails"]["unique_token"],
+    },
+    attributes: ["symbol_token"],
+    raw: true,
+  });
+
+  tokens = tokens?.map((item) => item?.symbol_token);
+  tokens?.forEach((token) => {
+    if (userObserver.has(token)) {
+      userObserver.get(token).push(ws);
+    }
+  });
+}
+
+// ? Update Client Observer <> After Add Operation
+function addInClientObserver(user_token, symbol_token) {}
+
+// ? Update Client Observer <> After Remove Operation
+function removeInClientObserver(user_token, symbol_token) {}
 
 setInterval(() => {
   console.log(`Number of active connections: ${watchlistWS.clients.size}`);
@@ -105,5 +130,5 @@ setInterval(() => {
   });
 }, 5000);
 
-module.exports = { init };
+module.exports = { init, addInClientObserver, removeInClientObserver };
 init();
