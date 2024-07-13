@@ -1,23 +1,26 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const authRoutes = require('./routes/authRoutes');
-const userRoute = require('./routes/userRoutes');
-const masterRoutes = require('./routes/masterRoutes');
-const watchListRoutes = require('./routes/watchListRoutes');
+const express = require("express");
+const bodyParser = require("body-parser");
+const authRoutes = require("./routes/authRoutes");
+const userRoute = require("./routes/userRoutes");
+const masterRoutes = require("./routes/masterRoutes");
+const watchListRoutes = require("./routes/watchListRoutes");
+const jobRoutes = require("./routes/jobRoutes");
 
-const errorMiddleware = require('./middlewares/errorMiddleware');
+const errorMiddleware = require("./middlewares/errorMiddleware");
 
 const app = express();
 
 app.use(bodyParser.json());
-app.use('/auth', authRoutes);
-app.use('/user', userRoute);
-app.use('/master', masterRoutes);
-app.use('/watch_list', watchListRoutes);
+app.use("/auth", authRoutes);
+app.use("/user", userRoute);
+app.use("/master", masterRoutes);
+app.use("/watch_list", watchListRoutes);
+app.use("/jobs", jobRoutes);
+
 app.use(errorMiddleware);
 
-app.get('/', (req, res) => {
-  res.send('Welcome to the API!');
+app.get("/", (req, res) => {
+  res.send("Welcome to the API!");
 });
 
 const PORT = process.env.PORT || 3000;
