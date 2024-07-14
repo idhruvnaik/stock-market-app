@@ -24,6 +24,11 @@ module.exports = (sequelize, DataTypes) => {
       order: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        defaultValue: 0,
+      },
+      symbol_raw_data: {
+        type: DataTypes.JSONB,
+        allowNull: false,
       },
     },
     {

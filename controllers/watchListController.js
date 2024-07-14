@@ -32,6 +32,7 @@ const add = async (req, res) => {
     });
     res.status(200).json({ symbol: object });
   } catch (error) {
+    message = "";
     if (error?.name == "SequelizeUniqueConstraintError") {
       message = "Item Already Exist!!";
     }
@@ -77,7 +78,6 @@ const setOrder = async (req, res) => {
           throw new Error("WatchList item not found");
         }
 
-        console.log(watchListItem);
         await watchListItem.update({ order: index });
       }
     });
