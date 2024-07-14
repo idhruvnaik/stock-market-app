@@ -68,7 +68,18 @@ async function channelData() {
 
       socket.fetchData(object);
 
-      socket.on((data) => {});
+      socket.on((data) => {
+        if(data?.token){
+          if(userObserver.has(data?.token)){
+            const clients = userObserver.get(data?.token);
+            if(clients.length > 0){
+              clients?.forEach(wsClient => {
+                wsClient.send(JSON.stringify(data));
+              });
+            }
+          }
+        }
+      });
     });
   } catch (e) {
     throw new Error(e);
@@ -80,8 +91,12 @@ watchlistWS.on("connection", async (ws, req) => {
   const token = location.query.token;
 
   try {
-    const data = await tokenUtil?.verifyAccessToken(token);
-    ws.client = data;
+    const data = await tokenUtil?.verifyAccessToken(token);    
+    if (data?.tokenDetails?.unique_token) {
+      ws.unique_token = data?.tokenDetails?.unique_token;
+    } else {
+      ws.close(1002, "Unauthorized");
+    }
     await updateClientObserver(ws, data);
 
     ws.on("close", () => {
@@ -112,10 +127,82 @@ async function updateClientObserver(ws, data) {
 }
 
 // ? Update Client Observer <> After Add Operation
-function addInClientObserver(user_token, symbol_token) {}
+async function addInClientObserver(user_token, watchlistObject) {
+  symbol = watchlistObject?.symbol_token;
+  if (userObserver.has(symbol)) {
+    const ws = await findClientByUniqueToken(user_token);
+    if (ws) {
+      userObserver.get(symbol).push(ws);
+    }
+  }
+}
 
 // ? Update Client Observer <> After Remove Operation
-function removeInClientObserver(user_token, symbol_token) {}
+async function removeInClientObserver(user_token, symbol_token) {
+  symbol = watchlistObject?.symbol_token;
+  if (userObserver.has(symbol)) {
+    const ws = await findClientByUniqueToken(user_token);
+    if (ws) {
+      let clients = userObserver?.get(symbol);
+      clients = clients?.filter((client) => client !== ws);
+      userObserver.get(symbol) = clients;
+    }
+  }
+}
+
+// ? Finds the webscoket client.
+function findClientByUniqueToken(unique_token) {
+  for (const ws of watchlistWS.clients) {
+    if (ws.unique_token === unique_token) {
+      return ws;
+    }
+  }
+  return null;
+}
+
+const add = async (req, res) => {
+  try {
+    const unique_token = req?.user?.tokenDetails?.unique_token;
+    const { symbol, symbol_token, symbol_raw_data } = req?.body;
+
+    const object = await db.UserWatchList.create({
+      user_token: unique_token,
+      symbol: symbol,
+      symbol_token: symbol_token,
+      symbol_raw_data: symbol_raw_data,
+    });
+
+    await addInClientObserver(unique_token, object);
+    res.status(200).json({ symbol: object });
+  } catch (error) {
+    console.log(error);
+    message = "";
+    if (error?.name == "SequelizeUniqueConstraintError") {
+      message = "Item Already Exist!!";
+    }
+    res.status(400).json({ message: message || "Internal Server Error" });
+  }
+};
+
+const remove = async (req, res) => {
+  try {
+    const unique_token = req?.user?.tokenDetails?.unique_token;
+    const { symbol, symbol_token } = req?.body;
+
+    await db.UserWatchList.destroy({
+      where: {
+        user_token: unique_token,
+        symbol: symbol,
+        symbol_token: symbol_token,
+      },
+    });
+
+    await removeInClientObserver(unique_token, object);
+    res.status(200).json({ message: "Deleted Successfuly!!" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 
 setInterval(() => {
   console.log(`Number of active connections: ${watchlistWS.clients.size}`);
@@ -130,5 +217,11 @@ setInterval(() => {
   });
 }, 5000);
 
-module.exports = { init, addInClientObserver, removeInClientObserver };
+module.exports = {
+  init,
+  addInClientObserver,
+  removeInClientObserver,
+  add,
+  remove,
+};
 init();

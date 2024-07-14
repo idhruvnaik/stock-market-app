@@ -1,4 +1,5 @@
 const db = require("../models/index");
+
 module.exports = (sequelize, DataTypes) => {
   const UserWatchList = sequelize.define(
     "UserWatchList",
