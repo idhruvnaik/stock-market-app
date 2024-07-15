@@ -68,6 +68,7 @@ function configureSmartAPI() {
               const clients = userObserver.get(integerNumber);
               if (clients.length > 0) {
                 clients?.forEach(wsClient => {
+                  data.token = (integerNumber || data?.token);
                   wsClient.send(JSON.stringify(data));
                 });
               }
