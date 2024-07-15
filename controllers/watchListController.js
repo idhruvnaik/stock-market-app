@@ -9,9 +9,9 @@ const list = async (req, res) => {
         {
           model: db.UserWatchList,
           as: "watchlist",
-          order: [["order", "ASC"]],
         },
       ],
+      order: [["watchlist", "order", "ASC"]],
     });
     res.status(200).json({ watchlist: user?.watchlist });
   } catch (error) {
