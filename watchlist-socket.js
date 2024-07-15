@@ -9,7 +9,7 @@ const watchlistWS = new WebSocket.Server({ port: 8080 });
 let { SmartAPI, WebSocketV2 } = require("smartapi-javascript");
 
 let smart_api = null; // Angel One API.
-let socket = null; // Angel One Socket.
+// let socket = null; // Angel One Socket.
 let userObserver = new Map();
 
 async function init() {
@@ -25,8 +25,8 @@ async function init() {
 async function makeUserList() {
   const symbols = await db.Symbol.findAll();
   symbols?.forEach((element) => {
-    if (!userObserver.has(element?.token)) {
-      userObserver.set(element?.token, []);
+    if (!userObserver.has(parseInt(element?.token))) {
+      userObserver.set(parseInt(element?.token), []);
     }
   });
 
@@ -37,16 +37,46 @@ function configureSmartAPI() {
   try {
     smart_api = new SmartAPI({ api_key: "t7slrOfp" });
     const token = otplib.authenticator.generate("KAKY5PKI5H6EXA5IUMSFEFYRR4");
+    const tokens = Array.from(userObserver.keys());
 
     smart_api.generateSession("D309388", "9586", token).then((auth) => {
-      socket = new WebSocketV2({
+      let socket = new WebSocketV2({
         jwttoken: auth?.data?.jwtToken,
         apikey: "t7slrOfp",
         clientcode: "D309388",
         feedtype: auth?.data?.feedToken,
       });
 
-      channelData();
+      socket.connect().then((res) => {
+        let object = {
+          correlationID: 'correlation_id',
+          action: 1,
+          mode: 2,
+          exchangeType: 2,
+          tokens: tokens,
+          params: 1,
+        };
+
+        socket.fetchData(object);
+        socket.on('tick', receiveTick);
+
+        function receiveTick(data) {
+          if (data?.token) {
+            const cleanedString = data?.token?.replace(/"/g, '');
+            const integerNumber = parseInt(cleanedString, 10);
+            if (userObserver.has(integerNumber)) {
+              const clients = userObserver.get(integerNumber);
+              if (clients.length > 0) {
+                clients?.forEach(wsClient => {
+                  wsClient.send(JSON.stringify(data));
+                });
+              }
+            }
+          }
+        }
+      });
+
+      // channelData();
     });
   } catch (e) {
     throw new error(e);
@@ -55,32 +85,6 @@ function configureSmartAPI() {
 
 async function channelData() {
   try {
-    tokens = Array.from(userObserver.keys());
-    socket.connect().then((data) => {
-      let object = {
-        correlationID: "correlation_id",
-        action: 1,
-        mode: 1,
-        exchangeType: 1,
-        tokens: tokens,
-        params: 1,
-      };
-
-      socket.fetchData(object);
-
-      socket.on((data) => {
-        if(data?.token){
-          if(userObserver.has(data?.token)){
-            const clients = userObserver.get(data?.token);
-            if(clients.length > 0){
-              clients?.forEach(wsClient => {
-                wsClient.send(JSON.stringify(data));
-              });
-            }
-          }
-        }
-      });
-    });
   } catch (e) {
     throw new Error(e);
   }
@@ -91,7 +95,7 @@ watchlistWS.on("connection", async (ws, req) => {
   const token = location.query.token;
 
   try {
-    const data = await tokenUtil?.verifyAccessToken(token);    
+    const data = await tokenUtil?.verifyAccessToken(token);
     if (data?.tokenDetails?.unique_token) {
       ws.unique_token = data?.tokenDetails?.unique_token;
     } else {
@@ -120,15 +124,15 @@ async function updateClientObserver(ws, data) {
 
   tokens = tokens?.map((item) => item?.symbol_token);
   tokens?.forEach((token) => {
-    if (userObserver.has(token)) {
-      userObserver.get(token).push(ws);
+    if (userObserver.has(parseInt(token))) {
+      userObserver.get(parseInt(token)).push(ws);
     }
   });
 }
 
 // ? Update Client Observer <> After Add Operation
-async function addInClientObserver(user_token, watchlistObject) {
-  symbol = watchlistObject?.symbol_token;
+async function addInClientObserver(user_token, symbol_token) {
+  symbol = parseInt(symbol_token);
   if (userObserver.has(symbol)) {
     const ws = await findClientByUniqueToken(user_token);
     if (ws) {
@@ -139,13 +143,15 @@ async function addInClientObserver(user_token, watchlistObject) {
 
 // ? Update Client Observer <> After Remove Operation
 async function removeInClientObserver(user_token, symbol_token) {
-  symbol = watchlistObject?.symbol_token;
+  symbol = parseInt(symbol_token);
   if (userObserver.has(symbol)) {
     const ws = await findClientByUniqueToken(user_token);
     if (ws) {
       let clients = userObserver?.get(symbol);
-      clients = clients?.filter((client) => client !== ws);
-      userObserver.get(symbol) = clients;
+      if (clients) {
+        clients = clients.filter((client) => client !== ws);
+        userObserver.set(symbol, clients);
+      }
     }
   }
 }
@@ -172,7 +178,7 @@ const add = async (req, res) => {
       symbol_raw_data: symbol_raw_data,
     });
 
-    await addInClientObserver(unique_token, object);
+    await addInClientObserver(unique_token, object?.symbol_token);
     res.status(200).json({ symbol: object });
   } catch (error) {
     console.log(error);
@@ -197,25 +203,25 @@ const remove = async (req, res) => {
       },
     });
 
-    await removeInClientObserver(unique_token, object);
+    await removeInClientObserver(unique_token, symbol_token);
     res.status(200).json({ message: "Deleted Successfuly!!" });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
 
-setInterval(() => {
-  console.log(`Number of active connections: ${watchlistWS.clients.size}`);
-  watchlistWS?.clients?.forEach((ws) => {
-    ws.send(
-      JSON.stringify({
-        stock: "AAPL",
-        data: {},
-        additionalData: "Empty",
-      })
-    );
-  });
-}, 5000);
+// setInterval(() => {
+//   console.log(`Number of active connections: ${watchlistWS.clients.size}`);
+//   watchlistWS?.clients?.forEach((ws) => {
+//     ws.send(
+//       JSON.stringify({
+//         stock: "AAPL",
+//         data: {},
+//         additionalData: "Empty",
+//       })
+//     );
+//   });
+// }, 5000);
 
 module.exports = {
   init,
@@ -223,5 +229,6 @@ module.exports = {
   removeInClientObserver,
   add,
   remove,
+  
 };
 init();
