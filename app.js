@@ -5,6 +5,7 @@ const userRoute = require("./routes/userRoutes");
 const masterRoutes = require("./routes/masterRoutes");
 const watchListRoutes = require("./routes/watchListRoutes");
 const jobRoutes = require("./routes/jobRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 
 const errorMiddleware = require("./middlewares/errorMiddleware");
 
@@ -16,6 +17,7 @@ app.use("/user", userRoute);
 app.use("/master", masterRoutes);
 app.use("/watch_list", watchListRoutes);
 app.use("/jobs", jobRoutes);
+app.use("/order", orderRoutes);
 
 app.use(errorMiddleware);
 
