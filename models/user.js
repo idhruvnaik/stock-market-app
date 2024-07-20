@@ -24,6 +24,11 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: "active",
         allowNull: false,
       },
+      balance: {
+        type: DataTypes.DOUBLE,
+        allowNull: false,
+        defaultValue: 0,
+      },
     },
     {
       tableName: "users",

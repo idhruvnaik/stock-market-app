@@ -1,7 +1,7 @@
 const WebSocket = require("ws");
 const otplib = require("otplib");
-const db = require("./models/index");
-const tokenUtil = require("./utils/tokenUtil");
+const db = require("../models/index");
+const tokenUtil = require("../utils/tokenUtil");
 const url = require("url");
 
 const watchlistWS = new WebSocket.Server({ port: 8080 });
