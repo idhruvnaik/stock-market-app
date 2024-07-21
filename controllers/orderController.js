@@ -7,11 +7,6 @@ const placeOrder = async (req, res) => {
     const { symbol, symbol_token, status, state, quantity, lot_size, price } =
       req.body;
 
-    const total_price = parseFloat(price * quantity).toFixed(2) || 0;
-    if (!total_price) {
-      throw new Error("Something went wrong with the price...");
-    }
-
     const order = await db.UserOrder.create({
       symbol: symbol,
       symbol_token: symbol_token,
@@ -19,8 +14,8 @@ const placeOrder = async (req, res) => {
       state: state,
       quantity: quantity,
       lot_size: lot_size,
-      total_price: total_price,
       user_token: unique_token,
+      reference_price: price,
     });
 
     await t.commit();

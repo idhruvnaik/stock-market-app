@@ -38,9 +38,20 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DOUBLE,
         allowNull: false,
       },
+      reference_price: {
+        type: DataTypes.DOUBLE,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      trigger_price: {
+        type: DataTypes.DOUBLE,
+        allowNull: false,
+        defaultValue: 0,
+      },
       total_price: {
         type: DataTypes.DOUBLE,
         allowNull: false,
+        defaultValue: 0,
       },
     },
     {
@@ -61,6 +72,27 @@ module.exports = (sequelize, DataTypes) => {
 
           user.balance -= userOrder.total_price;
           await user.save({ transaction: options.transaction });
+        },
+        beforeSave: async (userOrder, options) => {
+          if (userOrder.changed("trigger_price")) {
+            userOrder.total_price =
+              (userOrder.quantity * userOrder.trigger_price).toFixed() || 0;
+          }
+        },
+        beforeUpdate: async (userOrder, options) => {
+          const currentOrder = await UserOrder.findOne({
+            where: { id: userOrder.id },
+            transaction: options.transaction,
+          });
+
+          if (
+            currentOrder.status !== "PENDING" &&
+            userOrder.status === "CANCEL"
+          ) {
+            throw new Error(
+              "Order can only be canceled from the PENDING state"
+            );
+          }
         },
       },
     }

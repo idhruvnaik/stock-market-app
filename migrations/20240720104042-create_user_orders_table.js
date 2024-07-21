@@ -46,9 +46,20 @@ module.exports = {
         type: Sequelize.DOUBLE,
         allowNull: false,
       },
+      reference_price: {
+        type: Sequelize.DOUBLE,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      trigger_price: {
+        type: Sequelize.DOUBLE,
+        allowNull: false,
+        defaultValue: 0,
+      },
       total_price: {
         type: Sequelize.DOUBLE,
         allowNull: false,
+        defaultValue: 0,
       },
       createdAt: {
         allowNull: false,
