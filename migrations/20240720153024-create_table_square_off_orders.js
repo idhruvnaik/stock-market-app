@@ -10,12 +10,12 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      user_order_id: {
-        type: Sequelize.INTEGER,
+      user_order_token: {
+        type: Sequelize.STRING,
         allowNull: false,
         references: {
           model: "user_orders",
-          key: "id",
+          key: "order_token",
         },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
@@ -25,12 +25,12 @@ module.exports = {
         allowNull: false,
       },
       status: {
-        type: Sequelize.ENUM("pending", "success", "cancel"),
+        type: Sequelize.ENUM("PENDING", "SUCCESS", "CANCEL"),
         allowNull: false,
-        defaultValue: "pending",
+        defaultValue: "PENDING",
       },
       mode: {
-        type: Sequelize.ENUM("limit", "market", "NA"),
+        type: Sequelize.ENUM("LIMIT", "MARKET", "NA"),
         allowNull: false,
         defaultValue: "NA",
       },

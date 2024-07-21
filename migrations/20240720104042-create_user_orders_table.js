@@ -3,6 +3,14 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
+    await queryInterface.sequelize.query(`
+      CREATE TYPE "enum_user_orders_status" AS ENUM('PENDING', 'SUCCESS', 'CANCEL');
+    `);
+
+    await queryInterface.sequelize.query(`
+      CREATE TYPE "enum_user_orders_state" AS ENUM('BUY', 'SELL', 'NA');
+    `);
+
     await queryInterface.createTable("user_orders", {
       id: {
         allowNull: false,
@@ -29,12 +37,12 @@ module.exports = {
         allowNull: false,
       },
       status: {
-        type: Sequelize.ENUM("pending", "success", "cancel"),
+        type: Sequelize.ENUM("PENDING", "SUCCESS", "CANCEL"),
         allowNull: false,
-        defaultValue: "pending",
+        defaultValue: "PENDING",
       },
       state: {
-        type: Sequelize.ENUM("buy", "sell", "NA"),
+        type: Sequelize.ENUM("BUY", "SELL", "NA"),
         allowNull: false,
         defaultValue: "NA",
       },
@@ -60,6 +68,11 @@ module.exports = {
         type: Sequelize.DOUBLE,
         allowNull: false,
         defaultValue: 0,
+      },
+      order_token: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true,
       },
       createdAt: {
         allowNull: false,

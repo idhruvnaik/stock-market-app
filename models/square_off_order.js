@@ -1,11 +1,11 @@
 module.exports = (sequelize, DataTypes) => {
   const SquareOffOrder = sequelize.define("square_off_orders", {
-    user_order_id: {
-      type: DataTypes.INTEGER,
+    user_order_token: {
+      type: DataTypes.STRING,
       allowNull: false,
       references: {
         model: "user_orders",
-        key: "id",
+        key: "order_token",
       },
       onUpdate: "CASCADE",
       onDelete: "CASCADE",
@@ -15,12 +15,12 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM("pending", "success", "cancel"),
+      type: DataTypes.ENUM("PENDING", "SUCCESS", "CANCEL"),
       allowNull: false,
-      defaultValue: "pending",
+      defaultValue: "PENDING",
     },
     mode: {
-      type: DataTypes.ENUM("limit", "market", "NA"),
+      type: DataTypes.ENUM("LIMIT", "MARKET", "NA"),
       allowNull: false,
       defaultValue: "NA",
     },
@@ -32,9 +32,9 @@ module.exports = (sequelize, DataTypes) => {
 
   SquareOffOrder.associate = (models) => {
     SquareOffOrder.belongsTo(models.UserOrder, {
-      foreignKey: "user_order_id",
+      foreignKey: "user_order_token",
       as: "user_orders",
-      sourceKey: "id",
+      sourceKey: "order_token",
     });
   };
 

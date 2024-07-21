@@ -1,3 +1,5 @@
+const { v4: uuidv4 } = require("uuid");
+const constants = require("../config/constants");
 module.exports = (sequelize, DataTypes) => {
   const UserOrder = sequelize.define(
     "UserOrder",
@@ -21,12 +23,12 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       status: {
-        type: DataTypes.ENUM("pending", "success", "cancel"),
+        type: DataTypes.ENUM("PENDING", "SUCCESS", "CANCEL"),
         allowNull: false,
-        defaultValue: "pending",
+        defaultValue: "PENDING",
       },
       state: {
-        type: DataTypes.ENUM("buy", "sell", "NA"),
+        type: DataTypes.ENUM("BUY", "SELL", "NA"),
         allowNull: false,
         defaultValue: "NA",
       },
@@ -53,11 +55,26 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 0,
       },
+      order_token: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true,
+      },
     },
     {
       tableName: "user_orders",
       hooks: {
         beforeCreate: async (userOrder, options) => {
+          let token;
+          let tokenExists = true;
+          while (tokenExists) {
+            token = uuidv4();
+            tokenExists = await UserOrder.findOne({
+              where: { order_token: token },
+            });
+          }
+          userOrder.order_token = token;
+
           const user = await sequelize.models.User.findOne({
             where: { unique_token: userOrder.user_token },
           });
@@ -66,11 +83,12 @@ module.exports = (sequelize, DataTypes) => {
             throw new Error("User not found!!!");
           }
 
-          if (user.balance < userOrder.total_price) {
+          const total_price = userOrder.quantity * userOrder.reference_price;
+          if (user.balance < total_price) {
             throw new Error("Insufficient balance!!!");
           }
 
-          user.balance -= userOrder.total_price;
+          user.balance -= total_price;
           await user.save({ transaction: options.transaction });
         },
         beforeSave: async (userOrder, options) => {
@@ -80,19 +98,33 @@ module.exports = (sequelize, DataTypes) => {
           }
         },
         beforeUpdate: async (userOrder, options) => {
-          const currentOrder = await UserOrder.findOne({
-            where: { id: userOrder.id },
-            transaction: options.transaction,
-          });
+          const previousStatus = userOrder.previous("status");
+          const currentStatus = userOrder.status;
 
           if (
-            currentOrder.status !== "PENDING" &&
-            userOrder.status === "CANCEL"
+            previousStatus === constants.ORDER.STATUS.SUCCESS &&
+            currentStatus === constants.ORDER.STATUS.CANCEL
           ) {
-            throw new Error(
-              "Order can only be canceled from the PENDING state"
-            );
+            throw new Error("Successfull Order can not be cancelled!!");
+          } else if (
+            previousStatus === constants.ORDER.STATUS.PENDING &&
+            currentStatus === constants.ORDER.STATUS.CANCEL
+          ) {
+            const total_price = userOrder.quantity * userOrder.reference_price;
+            const user = await sequelize.models.User.findOne({
+              where: { unique_token: userOrder.user_token },
+            });
+
+            if (!user) {
+              throw new Error("User not found!!!");
+            }
+
+            user.balance += total_price;
+            await user.save({ transaction: options.transaction });
           }
+        },
+        beforeDestroy: async (userOrder, options) => {
+          throw new Error("Destroy operation is not permitted!!!");
         },
       },
     }
@@ -105,5 +137,6 @@ module.exports = (sequelize, DataTypes) => {
       sourceKey: "unique_token",
     });
   };
+
   return UserOrder;
 };
