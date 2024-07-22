@@ -6,10 +6,11 @@ const masterRoutes = require("./routes/masterRoutes");
 const watchListRoutes = require("./routes/watchListRoutes");
 const jobRoutes = require("./routes/jobRoutes");
 const orderRoutes = require("./routes/orderRoutes");
-
+const constants = require("./config/constants");
 const errorMiddleware = require("./middlewares/errorMiddleware");
 
 const app = express();
+global.constants = constants;
 
 app.use(bodyParser.json());
 app.use("/auth", authRoutes);
