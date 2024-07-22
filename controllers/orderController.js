@@ -17,14 +17,8 @@ const placeOrder = async (req, res) => {
 
 const list = async (req, res) => {
   try {
-    const unique_token = req?.user?.tokenDetails?.unique_token;
-    const { status, state } = req.body;
-
-    const orders = await db.UserOrder.findAll({
-      where: { user_token: unique_token, status: status, state: state },
-    });
-
-    res.status(200).json({ content: orders });
+    const result = await listLib(req?.user?.tokenDetails?.unique_token, req.body);
+    res.status(200).json({ content: result });
   } catch (error) {
     res
       .status(error?.code || 500)
