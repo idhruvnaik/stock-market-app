@@ -63,6 +63,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: false,
       },
+      symbol_raw_data: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+      },
     },
     {
       tableName: "user_orders",
