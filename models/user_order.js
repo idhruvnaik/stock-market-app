@@ -144,7 +144,7 @@ module.exports = (sequelize, DataTypes) => {
 
   // ? Calculate the total price
   async function updateTotalPrice(userOrder) {
-    return (userOrder.quantity * userOrder.trigger_price).toFixed() || 0;
+    return (userOrder.quantity * userOrder.trigger_price).toFixed(2) || 0;
   }
 
   // ? Rules <> Order
