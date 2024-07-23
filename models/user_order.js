@@ -67,6 +67,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.JSONB,
         allowNull: false,
       },
+      mode: {
+        type: DataTypes.ENUM("LIMIT", "MARKET", "NA"),
+        allowNull: false,
+        defaultValue: "NA",
+      },
     },
     {
       tableName: "user_orders",
@@ -78,6 +83,13 @@ module.exports = (sequelize, DataTypes) => {
         beforeSave: async (userOrder, options) => {
           if (userOrder.changed("trigger_price")) {
             userOrder.total_price = await updateTotalPrice(userOrder);
+            // ? Change status of Order to Success if total price is set
+            if (
+              userOrder.total_price > 0 &&
+              userOrder.status === constants.ORDER.STATUS.PENDING
+            ) {
+              userOrder.status = constants.ORDER.STATUS.SUCCESS;
+            }
           }
 
           await orderRules(userOrder, options);
