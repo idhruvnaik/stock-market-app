@@ -15,4 +15,8 @@ module.exports = {
       LIMIT: "LIMIT",
     },
   },
+  EXCHANGES: {
+    NSE: "NSE",
+    NFO: "NFO",
+  },
 };
