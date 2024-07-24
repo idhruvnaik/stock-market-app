@@ -1,21 +1,16 @@
 const WebSocket = require("ws");
-const otplib = require("otplib");
 const db = require("../models/index");
 const tokenUtil = require("../utils/tokenUtil");
 const url = require("url");
 
+const { subscribeToTicks } = require("../sockets/angel-one");
+
 const watchlistWS = new WebSocket.Server({ port: 8080 });
-
-let { SmartAPI, WebSocketV2 } = require("smartapi-javascript");
-
-let smart_api = null; // Angel One API.
-// let socket = null; // Angel One Socket.
 let userObserver = new Map();
 
 async function init() {
   try {
     userObserver = await makeUserList();
-    configureSmartAPI();
   } catch (e) {
     console.log(e);
   }
@@ -33,59 +28,21 @@ async function makeUserList() {
   return userObserver;
 }
 
-function configureSmartAPI() {
+async function channelData(data) {
   try {
-    smart_api = new SmartAPI({ api_key: "t7slrOfp" });
-    const token = otplib.authenticator.generate("KAKY5PKI5H6EXA5IUMSFEFYRR4");
-    const tokens = Array.from(userObserver.keys());
-
-    smart_api.generateSession("D309388", "9586", token).then((auth) => {
-      let socket = new WebSocketV2({
-        jwttoken: auth?.data?.jwtToken,
-        apikey: "t7slrOfp",
-        clientcode: "D309388",
-        feedtype: auth?.data?.feedToken,
-      });
-
-      socket.connect().then((res) => {
-        let object = {
-          correlationID: 'correlation_id',
-          action: 1,
-          mode: 2,
-          exchangeType: 2,
-          tokens: tokens,
-          params: 1,
-        };
-
-        socket.fetchData(object);
-        socket.on('tick', receiveTick);
-
-        function receiveTick(data) {
-          if (data?.token) {
-            const cleanedString = data?.token?.replace(/"/g, '');
-            const integerNumber = parseInt(cleanedString, 10);
-            if (userObserver.has(integerNumber)) {
-              const clients = userObserver.get(integerNumber);
-              if (clients.length > 0) {
-                clients?.forEach(wsClient => {
-                  data.token = (integerNumber || data?.token);
-                  wsClient.send(JSON.stringify(data));
-                });
-              }
-            }
-          }
+    if (data?.token) {
+      const cleanedString = data?.token?.replace(/"/g, "");
+      const integerNumber = parseInt(cleanedString, 10);
+      if (userObserver.has(integerNumber)) {
+        const clients = userObserver.get(integerNumber);
+        if (clients.length > 0) {
+          clients?.forEach((wsClient) => {
+            data.token = integerNumber || data?.token;
+            wsClient.send(JSON.stringify(data));
+          });
         }
-      });
-
-      // channelData();
-    });
-  } catch (e) {
-    throw new error(e);
-  }
-}
-
-async function channelData() {
-  try {
+      }
+    }
   } catch (e) {
     throw new Error(e);
   }
@@ -211,18 +168,7 @@ const remove = async (req, res) => {
   }
 };
 
-// setInterval(() => {
-//   console.log(`Number of active connections: ${watchlistWS.clients.size}`);
-//   watchlistWS?.clients?.forEach((ws) => {
-//     ws.send(
-//       JSON.stringify({
-//         stock: "AAPL",
-//         data: {},
-//         additionalData: "Empty",
-//       })
-//     );
-//   });
-// }, 5000);
+subscribeToTicks(channelData);
 
 module.exports = {
   init,
@@ -230,6 +176,5 @@ module.exports = {
   removeInClientObserver,
   add,
   remove,
-  
 };
 init();
