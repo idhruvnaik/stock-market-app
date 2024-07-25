@@ -4,8 +4,9 @@ const tokenUtil = require("../utils/tokenUtil");
 const url = require("url");
 
 const { subscribeToTicks } = require("../sockets/angel-one");
+const constants = require("../config/constants");
 
-const watchlistWS = new WebSocket.Server({ port: 8080 });
+const watchlistWS = new WebSocket.Server({ port: constants.SOCKETS.WATCHLIST });
 let userObserver = new Map();
 
 async function init() {
