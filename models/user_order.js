@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require("uuid");
+const constants = require("../config/constants");
 module.exports = (sequelize, DataTypes) => {
   const UserOrder = sequelize.define(
     "UserOrder",
