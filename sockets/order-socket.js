@@ -4,6 +4,8 @@ const tokenUtil = require("../utils/tokenUtil");
 const url = require("url");
 const constants = require("../config/constants");
 const { subscribeToTicks } = require("../sockets/angel-one");
+const { placeOrderLib, listLib, cancelOrderLib } = require("../lib/order");
+const { log } = require("console");
 
 let pendingOrderDataEmiter = new Map();
 let pendingOrderExecutor = new Map();
@@ -27,14 +29,15 @@ async function pendingOrders() {
   });
 
   for (const order of orders) {
-    if (!pendingOrderDataEmiter.has(parseInt(order?.symbol_token))) {
-      pendingOrderDataEmiter.set(parseInt(order?.symbol_token), []);
+    const symbolToken = parseInt(order?.symbol_token);
+    if (!pendingOrderDataEmiter.has(symbolToken)) {
+      pendingOrderDataEmiter.set(symbolToken, []);
     }
 
-    if (!pendingOrderExecutor.has(parseInt(order?.symbol_token))) {
-      pendingOrderExecutor.set(parseInt(order?.symbol_token), [order]);
+    if (!pendingOrderExecutor.has(symbolToken)) {
+      pendingOrderExecutor.set(symbolToken, [order]);
     } else {
-      pendingOrderExecutor.get(parseInt(order?.symbol_token)).push(order);
+      pendingOrderExecutor.get(symbolToken).push(order);
     }
   }
 
@@ -106,7 +109,6 @@ async function sendDataToClient(integerNumber, data) {
   }
 }
 
-// ? Data Sender Functions()
 async function monitorUserOrders(integerNumber, data) {
   if (pendingOrderExecutor.has(integerNumber)) {
     const orders = await pendingOrderExecutor.get(integerNumber);
@@ -131,10 +133,121 @@ async function executeUserOrder(order, price) {
   }
 }
 
-function cleanupExecutedOrder() {
-  // Cleanup from Map
+// !! API to manage the order
+const placeOrder = async (req, res) => {
+  try {
+    const order = await placeOrderLib(
+      req?.user?.tokenDetails?.unique_token,
+      req.body
+    );
+    await addOrderInMap(order, req?.user?.tokenDetails?.unique_token); // ** Adds newly added order to map
+    res.status(200).json({ content: order });
+  } catch (error) {
+    res
+      .status(error?.code || 500)
+      .json({ message: error?.message || "Sorry!! Something went wrong." });
+  }
+};
+
+const list = async (req, res) => {
+  try {
+    const result = await listLib(
+      req?.user?.tokenDetails?.unique_token,
+      req.body
+    );
+    res.status(200).json({ content: result });
+  } catch (error) {
+    res
+      .status(error?.code || 500)
+      .json({ message: error?.message || "Sorry!! Something went wrong." });
+  }
+};
+
+const cancelOrder = async (req, res) => {
+  try {
+    const order = await cancelOrderLib(
+      req?.user?.tokenDetails?.unique_token,
+      req.body
+    );
+    await removeOrderFromMap(order);
+    res.status(200).json({ content: "Cancelled!!!" });
+  } catch (error) {
+    res
+      .status(error?.code || 500)
+      .json({ message: error?.message || "Sorry!! Something went wrong." });
+  }
+};
+
+// ? Manage Map Variables
+async function addOrderInMap(order, user_token) {
+  const symbol_token = parseInt(order?.symbol_token);
+  const ws = await getWs(user_token);
+
+  if (!pendingOrderDataEmiter.has(symbol_token)) {
+    pendingOrderDataEmiter.set(symbol_token, [ws]);
+  } else {
+    if (ws) {
+      const webSockets = pendingOrderDataEmiter?.get(symbol_token);
+      if (!isWsExist(webSockets, ws)) {
+        pendingOrderDataEmiter?.get(symbol_token)?.push(ws);
+      }
+    }
+  }
+
+  if (!pendingOrderExecutor.has(symbol_token)) {
+    pendingOrderExecutor.set(symbol_token, [order]);
+  } else {
+    pendingOrderExecutor.get(symbol_token).push(order);
+  }
+}
+
+// ? Remove From Order Map
+async function removeOrderFromMap(order, user_token) {
+  const symbol_token = parseInt(order?.symbol_token);
+  const ws = await getWs(user_token);
+
+  if (ws) {
+    let webSockets = pendingOrderDataEmiter?.get(symbol_token);
+    webSockets = webSockets.filter(
+      (client) => client.unique_token !== ws?.unique_token
+    );
+    pendingOrderDataEmiter?.set(symbol_token, webSockets);
+  }
+
+  let orders = pendingOrderExecutor.get(symbol_token);
+  orders = orders.filter((object) => object.order_token !== order?.order_token);
+  pendingOrderExecutor?.set(symbol_token, orders);
+}
+
+function cleanupExecutedOrder() {}
+
+// ? Returns a single WebSocket connection based on the given user_token
+async function getWs(user_token) {
+  const webSockets = (await watchlistWS?.clients) || [];
+  let connection = null;
+  for (const ws of webSockets) {
+    if (ws.unique_token == user_token) {
+      connection = ws;
+      break;
+    }
+  }
+
+  return connection;
+}
+
+async function isWsExist(webSockets, newWs) {
+  let isExist = false;
+  for (const ws of webSockets) {
+    if (ws?.unique_token == newWs?.unique_token) {
+      isExist = true;
+    }
+  }
+
+  return isExist;
 }
 
 subscribeToTicks(channelData);
 
 init();
+
+module.exports = { placeOrder, list, cancelOrder };

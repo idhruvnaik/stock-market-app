@@ -1,10 +1,6 @@
 const express = require("express");
 const authMiddleware = require("../middlewares/authMiddleware");
-const {
-  placeOrder,
-  list,
-  cancelOrder,
-} = require("../controllers/orderController");
+const { placeOrder, list, cancelOrder } = require("../sockets/order-socket");
 
 const router = express.Router();
 router.post("/place_order", authMiddleware, placeOrder);
