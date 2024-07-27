@@ -169,7 +169,7 @@ const cancelOrder = async (req, res) => {
       req?.user?.tokenDetails?.unique_token,
       req.body
     );
-    await removeOrderFromMap(order);
+    await removeOrderFromMap(order, req?.user?.tokenDetails?.unique_token);
     res.status(200).json({ content: "Cancelled!!!" });
   } catch (error) {
     res
@@ -209,7 +209,7 @@ async function removeOrderFromMap(order, user_token) {
   if (ws) {
     let webSockets = pendingOrderDataEmiter?.get(symbol_token);
     webSockets = webSockets.filter(
-      (client) => client.unique_token !== ws?.unique_token
+      (client) => client.unique_token != ws?.unique_token
     );
     pendingOrderDataEmiter?.set(symbol_token, webSockets);
   }
@@ -223,7 +223,7 @@ function cleanupExecutedOrder() {}
 
 // ? Returns a single WebSocket connection based on the given user_token
 async function getWs(user_token) {
-  const webSockets = (await watchlistWS?.clients) || [];
+  const webSockets = watchlistWS?.clients || [];
   let connection = null;
   for (const ws of webSockets) {
     if (ws.unique_token == user_token) {
@@ -231,7 +231,6 @@ async function getWs(user_token) {
       break;
     }
   }
-
   return connection;
 }
 

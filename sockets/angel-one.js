@@ -39,7 +39,7 @@ function websocketInit(auth) {
       apikey: "t7slrOfp",
       clientcode: "D309388",
       feedtype: auth?.data?.feedToken,
-    });    
+    });
 
     socket.connect().then((res) => {
       let object = {
