@@ -4,8 +4,12 @@ const tokenUtil = require("../utils/tokenUtil");
 const url = require("url");
 const constants = require("../config/constants");
 const { subscribeToTicks } = require("../sockets/angel-one");
-const { placeOrderLib, listLib, cancelOrderLib } = require("../lib/order");
-const { log } = require("console");
+const {
+  placeOrderLib,
+  listLib,
+  cancelOrderLib,
+  updateOrderLib,
+} = require("../lib/order");
 
 let pendingOrderDataEmiter = new Map();
 let pendingOrderExecutor = new Map();
@@ -134,13 +138,24 @@ async function executeUserOrder(order, price) {
 }
 
 // !! API to manage the order
-const placeOrder = async (req, res) => {
+const list = async (req, res) => {
   try {
-    const order = await placeOrderLib(
+    const result = await listLib(
       req?.user?.tokenDetails?.unique_token,
       req.body
     );
-    await addOrderInMap(order, req?.user?.tokenDetails?.unique_token); // ** Adds newly added order to map
+    res.status(200).json({ content: result });
+  } catch (error) {
+    res
+      .status(error?.code || 500)
+      .json({ message: error?.message || "Sorry!! Something went wrong." });
+  }
+};
+
+const updateOrder = async (req, res) => {
+  try {
+    const order = await updateOrderLib(req.body);
+    await updateOrderMap(order);
     res.status(200).json({ content: order });
   } catch (error) {
     res
@@ -149,13 +164,14 @@ const placeOrder = async (req, res) => {
   }
 };
 
-const list = async (req, res) => {
+const placeOrder = async (req, res) => {
   try {
-    const result = await listLib(
+    const order = await placeOrderLib(
       req?.user?.tokenDetails?.unique_token,
       req.body
     );
-    res.status(200).json({ content: result });
+    await addOrderInMap(order, req?.user?.tokenDetails?.unique_token); // ** Adds newly added order to map
+    res.status(200).json({ content: order });
   } catch (error) {
     res
       .status(error?.code || 500)
@@ -219,7 +235,15 @@ async function removeOrderFromMap(order, user_token) {
   pendingOrderExecutor?.set(symbol_token, orders);
 }
 
-function cleanupExecutedOrder() {}
+// ? Update Order Map
+async function updateOrderMap(order, user_token) {
+  const symbol_token = parseInt(order?.symbol_token);
+  let orders = pendingOrderExecutor.get(symbol_token);
+
+  orders = orders.filter((object) => object.order_token !== order?.order_token);
+
+  pendingOrderExecutor?.set(symbol_token, orders);
+}
 
 // ? Returns a single WebSocket connection based on the given user_token
 async function getWs(user_token) {
@@ -249,4 +273,4 @@ subscribeToTicks(channelData);
 
 init();
 
-module.exports = { placeOrder, list, cancelOrder };
+module.exports = { placeOrder, list, cancelOrder, updateOrder };
