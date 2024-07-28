@@ -4,11 +4,13 @@ const {
   placeOrder,
   list,
   cancelOrder,
-} = require("../controllers/orderController");
+  updateOrder,
+} = require("../sockets/order-socket");
 
 const router = express.Router();
 router.post("/place_order", authMiddleware, placeOrder);
 router.post("/list", authMiddleware, list);
 router.post("/cancel", authMiddleware, cancelOrder);
+router.post("/update", authMiddleware, updateOrder);
 
 module.exports = router;

@@ -19,4 +19,9 @@ module.exports = {
     NSE: "NSE",
     NFO: "NFO",
   },
+  SOCKETS: {
+    WATCHLIST: 8080,
+    PENDING_ORDER: 8081,
+    SUCCESS_ORDER: 8082,
+  },
 };
