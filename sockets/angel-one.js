@@ -45,7 +45,7 @@ function websocketInit(auth) {
       let object = {
         correlationID: "correlation_id",
         action: 1,
-        mode: 1,
+        mode: 2,
         exchangeType: 2,
         tokens: tokens,
         params: 1,
