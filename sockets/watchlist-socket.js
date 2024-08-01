@@ -32,8 +32,12 @@ async function makeUserList() {
 async function channelData(data) {
   try {
     if (data?.token) {
-      const cleanedString = data?.token?.replace(/"/g, "");
+      const cleanedString =
+        typeof data?.token === "string"
+          ? data.token.replace(/"/g, "")
+          : data?.token;
       const integerNumber = parseInt(cleanedString, 10);
+
       if (userObserver.has(integerNumber)) {
         const clients = userObserver.get(integerNumber);
         if (clients.length > 0) {
@@ -140,7 +144,6 @@ const add = async (req, res) => {
     await addInClientObserver(unique_token, object?.symbol_token);
     res.status(200).json({ symbol: object });
   } catch (error) {
-    console.log(error);
     message = "";
     if (error?.name == "SequelizeUniqueConstraintError") {
       message = "Item Already Exist!!";

@@ -77,7 +77,10 @@ async function pendingOrders() {
 async function channelData(data) {
   try {
     if (data?.token) {
-      const cleanedString = data?.token?.replace(/"/g, "");
+      const cleanedString =
+        typeof data?.token === "string"
+          ? data.token.replace(/"/g, "")
+          : data?.token;
       const symbolToken = parseInt(cleanedString, 10);
 
       sendDataToClient(symbolToken, data);
