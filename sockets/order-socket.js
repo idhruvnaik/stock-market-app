@@ -124,6 +124,7 @@ async function sendDataToClient(integerNumber, data) {
   try {
     if (pendingOrderDataEmiter.has(integerNumber)) {
       const clients = pendingOrderDataEmiter.get(integerNumber);
+
       if (clients.length > 0) {
         clients?.forEach((wsClient) => {
           data.token = integerNumber || data?.token;
@@ -255,7 +256,11 @@ async function addOrderInMap(order, user_token) {
     const ws = await getWs(user_token);
 
     if (ws) {
-      if (!pendingOrderDataEmiter.has(symbol_token)) {
+      if (
+        !pendingOrderDataEmiter.has(symbol_token) ||
+        (pendingOrderDataEmiter.has(symbol_token) &&
+          pendingOrderDataEmiter.get(symbol_token).length == 0)
+      ) {
         pendingOrderDataEmiter.set(symbol_token, [ws]);
       } else {
         const webSockets = pendingOrderDataEmiter?.get(symbol_token);
