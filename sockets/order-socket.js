@@ -236,10 +236,11 @@ async function addOrderInMap(order, user_token) {
       if (!pendingOrderDataEmiter.has(symbol_token)) {
         pendingOrderDataEmiter.set(symbol_token, [ws]);
       } else {
-        const webSockets = pendingOrderDataEmiter?.get(symbol_token);
-        if (!isWsExist(webSockets, ws)) {
-          pendingOrderDataEmiter?.get(symbol_token)?.push(ws);
-        }
+        // const webSockets = pendingOrderDataEmiter?.get(symbol_token);
+        pendingOrderDataEmiter?.get(symbol_token)?.push(ws);
+        // if (!isWsExist(webSockets, ws)) {
+        //   pendingOrderDataEmiter?.get(symbol_token)?.push(ws);
+        // }
       }
     }
 
