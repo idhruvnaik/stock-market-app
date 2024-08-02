@@ -4,6 +4,8 @@ const tokenUtil = require("../utils/tokenUtil");
 const url = require("url");
 const constants = require("../config/constants");
 const { subscribeToTicks } = require("../sockets/angel-one");
+const { v4: uuidv4 } = require("uuid");
+
 const {
   placeOrderLib,
   listLib,
@@ -26,12 +28,15 @@ watchlistWS.on("connection", async (ws, req) => {
     const data = await tokenUtil?.verifyAccessToken(token);
     if (data?.tokenDetails?.unique_token) {
       ws.unique_token = data?.tokenDetails?.unique_token;
+      ws.id = generateUniqueToken();
     } else {
       ws.close(1002, "Unauthorized");
     }
     await updatePendingOrderData(ws, data);
 
-    ws.on("close", (data) => {});
+    ws.on("close", async (data) => {
+      await removeWebSocket(ws);
+    });
   } catch (error) {
     ws.send(JSON.stringify({ error: "Unauthorized" }));
     ws.close(1002, "Unauthorized");
@@ -236,11 +241,10 @@ async function addOrderInMap(order, user_token) {
       if (!pendingOrderDataEmiter.has(symbol_token)) {
         pendingOrderDataEmiter.set(symbol_token, [ws]);
       } else {
-        // const webSockets = pendingOrderDataEmiter?.get(symbol_token);
-        pendingOrderDataEmiter?.get(symbol_token)?.push(ws);
-        // if (!isWsExist(webSockets, ws)) {
-        //   pendingOrderDataEmiter?.get(symbol_token)?.push(ws);
-        // }
+        const webSockets = pendingOrderDataEmiter?.get(symbol_token);
+        if (!isWsExist(webSockets, ws)) {
+          pendingOrderDataEmiter?.get(symbol_token)?.push(ws);
+        }
       }
     }
 
@@ -316,7 +320,7 @@ async function isWsExist(webSockets, newWs) {
   try {
     let isExist = false;
     for (const ws of webSockets) {
-      if (ws?.unique_token == newWs?.unique_token) {
+      if (ws?.id == newWs?.id) {
         isExist = true;
       }
     }
@@ -325,6 +329,23 @@ async function isWsExist(webSockets, newWs) {
   } catch (error) {
     throw error;
   }
+}
+
+// Function to remove WebSocket from the map
+async function removeWebSocket(ws) {
+  for (const [token, sockets] of pendingOrderDataEmiter) {
+    const updatedSockets = sockets.filter((socket) => socket.id !== ws.id);
+
+    if (updatedSockets.length !== sockets.length) {
+      pendingOrderDataEmiter.set(token, updatedSockets);
+    }
+  }
+}
+
+function generateUniqueToken() {
+  const uuid = uuidv4();
+  const timestamp = Date.now().toString(36);
+  return `${uuid}-${timestamp}`;
 }
 
 subscribeToTicks(channelData);
