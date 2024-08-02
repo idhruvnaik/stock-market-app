@@ -3,9 +3,14 @@ const db = require("../models/index");
 const EventEmitter = require("events");
 let { WebSocketV2 } = require("smartapi-javascript");
 const { authorize } = require("../lib/angel-one");
+const moment = require("moment");
 
 const eventEmitter = new EventEmitter();
 let tokens = [];
+
+const cutoffTime = moment()
+  .tz("Asia/Kolkata")
+  .set({ hour: 15, minute: 30, second: 0, millisecond: 0 });
 
 const initializeWebSocket = async () => {
   try {
@@ -53,7 +58,19 @@ function websocketInit(auth) {
 
       socket.fetchData(object);
       socket.on("tick", function (data) {
-        eventEmitter.emit("tick", data);
+        const now = moment().tz("Asia/Kolkata");
+        if (now.isAfter(cutoffTime)) {
+          setInterval(function () {
+            const randomValue = Math.floor(Math.random() * 41) - 20;
+            const last_traded_price = (
+              (parseInt(data?.last_traded_price) || 0) + randomValue || 0
+            ).toString();
+            data.last_traded_price = last_traded_price;
+            eventEmitter.emit("tick", data);
+          }, 1000);
+        } else {
+          eventEmitter.emit("tick", data);
+        }
       });
     });
   } catch (error) {
