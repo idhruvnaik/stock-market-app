@@ -143,6 +143,11 @@ async function monitorUserOrders(integerNumber, data) {
           parseFloat(data?.last_traded_price) / 100
         ).toFixed(2);
 
+        if (order?.user_token == "69c0b14e-bb04-433f-b916-15ca4a76a835") {
+          console.log(last_traded_price);
+          console.log(order?.reference_price);
+        }
+
         if (
           (last_traded_price <= order?.reference_price &&
             order?.state == constants.ORDER.STATE.BUY) ||
@@ -162,6 +167,18 @@ async function executeUserOrder(order, price) {
   try {
     if (order) {
       await order.update({ trigger_price: price });
+      await removeOrderFromMap(order, order?.user_token);
+      const ws = await getWs(order?.user_token);
+      if (ws) {
+        ws.send(
+          JSON.stringify({
+            order_token: order?.order_token,
+            status: order?.status,
+            mode: order?.mode,
+            state: order?.state,
+          })
+        );
+      }
     }
   } catch (error) {
     throw error;
@@ -288,11 +305,14 @@ async function updateOrderMap(order, user_token) {
     const symbol_token = parseInt(order?.symbol_token);
     let orders = pendingOrderExecutor.get(symbol_token);
 
-    orders = orders.filter(
-      (object) => object.order_token !== order?.order_token
-    );
+    if (orders.length > 0) {
+      orders = orders?.filter(
+        (object) => object.order_token !== order?.order_token
+      );
 
-    pendingOrderExecutor?.set(symbol_token, orders);
+      orders.push(order);
+      pendingOrderExecutor?.set(symbol_token, orders);
+    }
   } catch (error) {
     throw error;
   }
