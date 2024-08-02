@@ -197,7 +197,7 @@ const placeOrder = async (req, res) => {
       req.body
     );
 
-    if (order?.state == constants.ORDER.MODE.LIMIT) {
+    if (order?.mode == constants.ORDER.MODE.LIMIT) {
       await addOrderInMap(order, req?.user?.tokenDetails?.unique_token); // ** Adds newly added order to map
     }
 
@@ -232,10 +232,10 @@ async function addOrderInMap(order, user_token) {
     const symbol_token = parseInt(order?.symbol_token);
     const ws = await getWs(user_token);
 
-    if (!pendingOrderDataEmiter.has(symbol_token)) {
-      pendingOrderDataEmiter.set(symbol_token, [ws]);
-    } else {
-      if (ws) {
+    if (ws) {
+      if (!pendingOrderDataEmiter.has(symbol_token)) {
+        pendingOrderDataEmiter.set(symbol_token, [ws]);
+      } else {
         const webSockets = pendingOrderDataEmiter?.get(symbol_token);
         if (!isWsExist(webSockets, ws)) {
           pendingOrderDataEmiter?.get(symbol_token)?.push(ws);
