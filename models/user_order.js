@@ -108,6 +108,12 @@ module.exports = (sequelize, DataTypes) => {
       as: "user",
       sourceKey: "unique_token",
     });
+
+    UserOrder.belongsTo(models.Symbol, {
+      foreignKey: "symbol_token",
+      as: "masterSymbol",
+      targetKey: "token",
+    });
   };
 
   // ? Generate Unique Token <> Order

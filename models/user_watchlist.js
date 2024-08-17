@@ -49,6 +49,12 @@ module.exports = (sequelize, DataTypes) => {
       as: "user",
       sourceKey: "unique_token",
     });
+
+    UserWatchList.belongsTo(models.Symbol, {
+      foreignKey: "symbol_token",
+      as: "masterSymbol",
+      targetKey: "token",
+    });
   };
 
   return UserWatchList;

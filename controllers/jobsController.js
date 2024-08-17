@@ -1,6 +1,8 @@
 const db = require("../models");
 const moment = require("moment");
+const constants = require("../config/constants");
 
+const todayDate = moment().format("YYYY-MM-DD");
 const importSymbols = async (req, res) => {
   try {
     const t = await db.sequelize.transaction();
@@ -47,6 +49,75 @@ const importSymbols = async (req, res) => {
   }
 };
 
+const removeExpiredSymbolsFromWatchlist = async (req, res) => {
+  const t = await db.sequelize.transaction();
+  try {
+    const watchList = await db.UserWatchList.findAll({
+      include: {
+        model: db.Symbol,
+        as: "masterSymbol",
+        required: true,
+      },
+    });
+
+    watchList?.forEach(async (element) => {
+      var date = moment(element?.masterSymbol?.expiry, "DDMMMYYYY").format(
+        "YYYY-MM-DD"
+      );
+
+      if (date && date < todayDate) {
+        await element.destroy();
+      }
+    });
+
+    await t.commit();
+    console.log("Transaction has been committed successfully");
+    res.status(200).json({ message: "Done!!!" });
+  } catch (error) {
+    console.log(error);
+    await t.rollback();
+    res
+      .status(error?.code || 500)
+      .json({ message: error?.message || "Sorry!! Something went wrong." });
+  }
+};
+
+const removeExpiredSymbolsFromPendingOrders = async (req, res) => {
+  const t = await db.sequelize.transaction();
+  try {
+    const orders = await db.UserOrder.findAll({
+      where: {
+        status: constants.ORDER.STATUS.PENDING,
+      },
+      include: {
+        model: db.Symbol,
+        as: "masterSymbol",
+        required: true,
+      },
+    });
+
+    orders?.forEach(async (order) => {
+      var date = moment(order?.masterSymbol?.expiry, "DDMMMYYYY").format(
+        "YYYY-MM-DD"
+      );
+
+      if (date && date < todayDate) {
+        await order.destroy();
+      }
+    });
+
+    await t.commit();
+    console.log("Transaction has been committed successfully");
+    res.status(200).json({ message: "Done!!!" });
+  } catch (error) {
+    console.log(error);
+    await t.rollback();
+    res
+      .status(error?.code || 500)
+      .json({ message: error?.message || "Sorry!! Something went wrong." });
+  }
+};
+
 const isTokenExpired = (date) => {
   const parsedDate = moment(date, "DDMMMYYYY");
   const currentDate = moment();
@@ -57,4 +128,8 @@ const isTokenExpired = (date) => {
 const isFUTSymbol = (symbol) =>
   symbol.exch_seg == "NFO" && symbol.instrumenttype == "FUTSTK";
 
-module.exports = { importSymbols };
+module.exports = {
+  importSymbols,
+  removeExpiredSymbolsFromWatchlist,
+  removeExpiredSymbolsFromPendingOrders,
+};

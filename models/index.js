@@ -16,8 +16,8 @@ const UserOrder = UserOrderModel(sequelize, DataTypes);
 const SquareOffOrder = SquareOffOrderModel(sequelize, DataTypes);
 
 User.associate({ UserWatchList });
-UserWatchList.associate({ User });
-UserOrder.associate({ User });
+UserWatchList.associate({ User, Symbol });
+UserOrder.associate({ User, Symbol });
 SquareOffOrder.associate({ UserOrder });
 
 const db = {
