@@ -24,9 +24,24 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: "NA",
     },
-    price: {
+    state: {
+      type: DataTypes.ENUM("BUY", "SELL"),
+      allowNull: false,
+    },
+    reference_price: {
       type: DataTypes.DOUBLE,
       allowNull: false,
+      defaultValue: 0,
+    },
+    trigger_price: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    total_price: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+      defaultValue: 0,
     },
   });
 

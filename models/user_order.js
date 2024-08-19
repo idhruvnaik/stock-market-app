@@ -114,6 +114,12 @@ module.exports = (sequelize, DataTypes) => {
       as: "masterSymbol",
       targetKey: "token",
     });
+
+    UserOrder.hasMany(models.SquareOffOrder, {
+      foreignKey: "user_order_token",
+      as: "squareOffOrders",
+      sourceKey: "order_token",
+    });
   };
 
   // ? Generate Unique Token <> Order
