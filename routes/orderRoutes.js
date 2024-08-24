@@ -7,6 +7,8 @@ const {
   updateOrder,
 } = require("../sockets/pending-order-socket");
 
+const {} = require("../sockets/success-order-socket");
+
 const router = express.Router();
 router.post("/place_order", authMiddleware, placeOrder);
 router.post("/list", authMiddleware, list);
