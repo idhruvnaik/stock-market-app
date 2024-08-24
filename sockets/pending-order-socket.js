@@ -3,7 +3,7 @@ const db = require("../models/index");
 const tokenUtil = require("../utils/tokenUtil");
 const url = require("url");
 const constants = require("../config/constants");
-const { subscribeToTicks } = require("../sockets/angel-one");
+const { subscribeToTicks } = require("./angel-one");
 const { v4: uuidv4 } = require("uuid");
 
 const {

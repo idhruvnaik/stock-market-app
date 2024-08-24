@@ -5,7 +5,7 @@ const {
   list,
   cancelOrder,
   updateOrder,
-} = require("../sockets/order-socket");
+} = require("../sockets/pending-order-socket");
 
 const router = express.Router();
 router.post("/place_order", authMiddleware, placeOrder);
