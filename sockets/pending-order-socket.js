@@ -204,7 +204,13 @@ const list = async (req, res) => {
 const updateOrder = async (req, res) => {
   try {
     const order = await updateOrderLib(req.body);
-    await updateOrderMap(order);
+    if (
+      order?.status == constants.ORDER.STATUS.PENDING &&
+      order?.mode == constants.ORDER.MODE.MARKET
+    ) {
+      await updateOrderMap(order);
+    }
+
     res.status(200).json({ content: order });
   } catch (error) {
     res

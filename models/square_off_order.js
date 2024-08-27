@@ -1,3 +1,4 @@
+const constants = require("../config/constants");
 module.exports = (sequelize, DataTypes) => {
   const SquareOffOrder = sequelize.define(
     "square_off_orders",
@@ -47,17 +48,44 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      timestamps: false,
+      hooks: {
+        afterSave: async (order, options) => {
+          if (!order.user_order) {
+            order.user_order = await order.getUser_order();
+          }
+          if (
+            order.changed("status") &&
+            order.status == constants.ORDER.STATUS.SUCCESS
+          ) {
+            await addBalanceToUser(order, options);
+          }
+        },
+      },
     }
   );
 
   SquareOffOrder.associate = (models) => {
     SquareOffOrder.belongsTo(models.UserOrder, {
       foreignKey: "user_order_token",
-      as: "user_orders",
-      sourceKey: "order_token",
+      as: "user_order",
+      targetKey: "order_token",
     });
   };
+
+  // ? Add balance to user on square off success
+  async function addBalanceToUser(order, options) {
+    const user = await sequelize.models.User.findOne({
+      where: { unique_token: order?.user_order?.user_token },
+    });
+
+    if (!user) {
+      throw new Error("User not found!!!");
+    }
+
+    const total_price = order.quantity * order.trigger_price;
+    user.balance += total_price;
+    await user.save({ transaction: options.transaction });
+  }
 
   return SquareOffOrder;
 };
