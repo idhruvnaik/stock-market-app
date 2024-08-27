@@ -6,6 +6,8 @@ const masterRoutes = require("./routes/masterRoutes");
 const watchListRoutes = require("./routes/watchListRoutes");
 const jobRoutes = require("./routes/jobRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const squareOffRoutes = require("./routes/squareOffRoutes");
+
 const constants = require("./config/constants");
 const errorMiddleware = require("./middlewares/errorMiddleware");
 
@@ -19,6 +21,7 @@ app.use("/master", masterRoutes);
 app.use("/watch_list", watchListRoutes);
 app.use("/jobs", jobRoutes);
 app.use("/order", orderRoutes);
+app.use("/square_off", squareOffRoutes);
 
 app.use(errorMiddleware);
 

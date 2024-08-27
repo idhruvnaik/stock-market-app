@@ -34,9 +34,15 @@ module.exports = {
         allowNull: false,
         defaultValue: "NA",
       },
-      price: {
-        type: Sequelize.DOUBLE,
+      createdAt: {
         allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
       },
     });
   },

@@ -32,7 +32,7 @@ watchlistWS.on("connection", async (ws, req) => {
       ws.close(1002, "Unauthorized");
     }
 
-    ws.on("close", async (data) => {
+    ws.on("close", async (ws) => {
       await removeWebSocket(ws);
     });
   } catch (error) {
@@ -56,7 +56,10 @@ async function updateSuccessOrderDataEmitter(ws, tokens) {
     if (ws && tokens.length) {
       tokens?.forEach((token) => {
         if (successOrderDataEmitter.has(token)) {
-          successOrderDataEmitter.get(token).push(ws);
+          const webSockets = successOrderDataEmitter?.get(token);
+          if (!isWsExist(webSockets, ws)) {
+            successOrderDataEmitter?.get(token)?.push(ws);
+          }
         } else {
           successOrderDataEmitter.set(token, [ws]);
         }
@@ -99,6 +102,33 @@ async function sendDataToClient(symbol_token, data) {
       }
     }
   } catch (error) {}
+}
+
+// !! Function to remove WebSocket from the map
+async function removeWebSocket(ws) {
+  for (const [token, sockets] of successOrderDataEmitter) {
+    const updatedSockets = sockets?.filter((socket) => socket.id !== ws.id);
+
+    if (updatedSockets?.length !== sockets?.length) {
+      successOrderDataEmitter.set(token, updatedSockets);
+    }
+  }
+}
+
+// ? Checks if a particular client exists in WebSocket clients
+async function isWsExist(webSockets, newWs) {
+  try {
+    let isExist = false;
+    for (const ws of webSockets) {
+      if (ws?.id == newWs?.id) {
+        isExist = true;
+      }
+    }
+
+    return isExist;
+  } catch (error) {
+    throw error;
+  }
 }
 
 subscribeToTicks(channelData);

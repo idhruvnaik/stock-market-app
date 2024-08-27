@@ -1,4 +1,3 @@
-const db = require("../models");
 const { placeOrderLib, listLib, cancelOrderLib } = require("../lib/order");
 
 const placeOrder = async (req, res) => {
@@ -17,7 +16,10 @@ const placeOrder = async (req, res) => {
 
 const list = async (req, res) => {
   try {
-    const result = await listLib(req?.user?.tokenDetails?.unique_token, req.body);
+    const result = await listLib(
+      req?.user?.tokenDetails?.unique_token,
+      req.body
+    );
     res.status(200).json({ content: result });
   } catch (error) {
     res

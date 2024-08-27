@@ -11,7 +11,7 @@ const {
   listLib,
   cancelOrderLib,
   updateOrderLib,
-} = require("../lib/order");
+} = require("../lib/order/pending");
 
 let pendingOrderDataEmiter = new Map();
 let pendingOrderExecutor = new Map();
