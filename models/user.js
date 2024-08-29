@@ -29,14 +29,41 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 0,
       },
+      role: {
+        type: DataTypes.ENUM,
+        allowNull: false,
+        values: ["ADMIN", "CLIENT"],
+        defaultValue: "CLIENT",
+      },
+      first_name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      last_name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
     },
     {
       tableName: "users",
       hooks: {
         beforeCreate: async (user, options) => {
+          if (user.role === "ADMIN") {
+            const existingAdmin = await User.findOne({
+              where: { role: "ADMIN" },
+            });
+
+            if (existingAdmin) {
+              throw new Error("Only one ADMIN is allowed.");
+            }
+          }
+
           let token;
           let tokenExists = true;
-          console.log(user);
           while (tokenExists) {
             token = uuidv4();
             tokenExists = await User.findOne({
@@ -45,6 +72,17 @@ module.exports = (sequelize, DataTypes) => {
           }
 
           user.unique_token = token;
+        },
+        beforeUpdate: async (user, options) => {
+          if (user.role === "ADMIN") {
+            const existingAdmin = await User.findOne({
+              where: { role: "ADMIN", id: { [sequelize.Op.ne]: user.id } },
+            });
+
+            if (existingAdmin) {
+              throw new Error("Only one ADMIN is allowed.");
+            }
+          }
         },
       },
     }

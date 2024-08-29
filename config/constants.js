@@ -24,4 +24,14 @@ module.exports = {
     PENDING_ORDER: 8081,
     SUCCESS_ORDER: 8082,
   },
+  ROLE: {
+    ADMIN: "ADMIN",
+    CLIENT: "CLIENT",
+  },
+  USER: {
+    STATUS: {
+      ACTIVE: "active",
+      INACTIVE: "inactive",
+    },
+  },
 };
