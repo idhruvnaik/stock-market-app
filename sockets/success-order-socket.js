@@ -14,7 +14,7 @@ const watchlistWS = new WebSocket.Server({
 
 watchlistWS.on("connection", async (ws, req) => {
   const location = url.parse(req.url, true);
-  const token = location.query.token;
+  const token = location?.query?.token;
 
   try {
     const data = await tokenUtil?.verifyAccessToken(token);
@@ -32,7 +32,7 @@ watchlistWS.on("connection", async (ws, req) => {
       ws.close(1002, "Unauthorized");
     }
 
-    ws.on("close", async (ws) => {
+    ws.on("close", async (code) => {
       await removeWebSocket(ws);
     });
   } catch (error) {
@@ -54,10 +54,10 @@ async function init() {
 async function updateSuccessOrderDataEmitter(ws, tokens) {
   try {
     if (ws && tokens.length) {
-      tokens?.forEach((token) => {
+      tokens?.forEach(async (token) => {
         if (successOrderDataEmitter.has(token)) {
           const webSockets = successOrderDataEmitter?.get(token);
-          if (!isWsExist(webSockets, ws)) {
+          if (!(await isWsExist(webSockets, ws))) {
             successOrderDataEmitter?.get(token)?.push(ws);
           }
         } else {
