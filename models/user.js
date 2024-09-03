@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require("uuid");
+const { Sequelize } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(
@@ -76,7 +77,7 @@ module.exports = (sequelize, DataTypes) => {
         beforeUpdate: async (user, options) => {
           if (user.role === "ADMIN") {
             const existingAdmin = await User.findOne({
-              where: { role: "ADMIN", id: { [sequelize.Op.ne]: user.id } },
+              where: { role: "ADMIN", id: { [Sequelize.Op.ne]: user.id } },
             });
 
             if (existingAdmin) {
