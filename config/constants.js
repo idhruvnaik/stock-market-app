@@ -4,6 +4,7 @@ module.exports = {
       PENDING: "PENDING",
       SUCCESS: "SUCCESS",
       CANCEL: "CANCEL",
+      SQUARED_OFF: "SQUARED_OFF",
     },
     STATE: {
       BUY: "BUY",

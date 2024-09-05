@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 const constants = require("../config/constants");
+
 module.exports = (sequelize, DataTypes) => {
   const UserOrder = sequelize.define(
     "UserOrder",
@@ -23,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       status: {
-        type: DataTypes.ENUM("PENDING", "SUCCESS", "CANCEL"),
+        type: DataTypes.ENUM("PENDING", "SUCCESS", "CANCEL", "SQUARED_OFF"),
         allowNull: false,
         defaultValue: "PENDING",
       },
@@ -157,7 +158,13 @@ module.exports = (sequelize, DataTypes) => {
 
   // ? Calculate the total price
   async function updateTotalPrice(userOrder) {
-    return (userOrder.quantity * userOrder.trigger_price).toFixed(2) || 0;
+    return (
+      (
+        userOrder.lot_size *
+        userOrder.quantity *
+        userOrder.trigger_price
+      ).toFixed(2) || 0
+    );
   }
 
   // ? Rules <> Order

@@ -293,7 +293,7 @@ async function addOrderInMap(order, user_token) {
 // ? Remove From Order Map
 async function removeOrderFromMap(order, user_token) {
   try {
-    const symbol_token = parseInt(order?.symbol_token);
+    const symbol_token = parseInt(order?.user_order?.symbol_token);
     const ws = await getWs(user_token);
 
     if (ws) {
