@@ -7,7 +7,7 @@ const generateAccessToken = async (user) => {
     const accessToken = jwt.sign(
       payload,
       process.env.ACCESS_TOKEN_PRIVATE_KEY,
-      { expiresIn: "10m" }
+      { expiresIn: "10d" }
     );
 
     return Promise.resolve({ accessToken });
