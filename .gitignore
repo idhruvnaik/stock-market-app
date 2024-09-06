@@ -5,3 +5,4 @@ stock-market-app-backend.pem
 stock-market-back-end.sh
 deploy.sh
 stock-market-app-backend-key-pair.pem
+.DS_Store
