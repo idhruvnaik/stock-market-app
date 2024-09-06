@@ -30,6 +30,6 @@ const getFilteredSymbolList = async () => {
 };
 
 const isFUTSymbol = (symbol) =>
-  symbol.exch_seg == "NFO" && symbol.instrumenttype == "FUTSTK";
+  (symbol.exch_seg == "NFO" && symbol.instrumenttype == "FUTSTK") || (symbol.exch_seg == "MCX" && symbol.instrumenttype == "FUTCOM");
 
 module.exports = { getFilteredSymbolList, isFUTSymbol };
