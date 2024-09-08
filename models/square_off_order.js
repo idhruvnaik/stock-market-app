@@ -100,6 +100,10 @@ module.exports = (sequelize, DataTypes) => {
             where: { order_token: order?.user_order_token },
           });
 
+          if (order.changed("trigger_price")) {
+            order.total_price = await updateTotalPrice(userOrder);
+          }
+
           const previousStatus = order.previous("status");
           const currentStatus = order.status;
 
@@ -152,7 +156,8 @@ module.exports = (sequelize, DataTypes) => {
       throw new Error("User not found!!!");
     }
 
-    const total_price = order?.lot_size * order?.quantity * order?.trigger_price;
+    const total_price =
+      order?.lot_size * order?.quantity * order?.trigger_price;
     user.balance += total_price;
     await user.save({ transaction: options.transaction });
   }
@@ -170,6 +175,13 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     return token;
+  }
+
+  // ? Calculate the total price
+  async function updateTotalPrice(order) {
+    return (
+      (order.lot_size * order.quantity * order.trigger_price).toFixed(2) || 0
+    );
   }
 
   return SquareOffOrder;
