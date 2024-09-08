@@ -19,6 +19,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DOUBLE,
         allowNull: false,
       },
+      lot_size: {
+        type: DataTypes.DOUBLE,
+        allowNull: false,
+      },
       status: {
         type: DataTypes.ENUM("PENDING", "SUCCESS", "CANCEL"),
         allowNull: false,
@@ -148,7 +152,7 @@ module.exports = (sequelize, DataTypes) => {
       throw new Error("User not found!!!");
     }
 
-    const total_price = order.quantity * order.trigger_price;
+    const total_price = order?.lot_size * order?.quantity * order?.trigger_price;
     user.balance += total_price;
     await user.save({ transaction: options.transaction });
   }

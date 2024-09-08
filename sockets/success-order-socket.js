@@ -6,7 +6,11 @@ const constants = require("../config/constants");
 const { subscribeToTicks } = require("./angel-one");
 const { v4: uuidv4 } = require("uuid");
 
-const { squareOffOrderLib } = require("../lib/order/success");
+const {
+  squareOffOrderLib,
+  canceLib,
+  listLib,
+} = require("../lib/order/success");
 
 let successOrderDataEmitter = new Map();
 let successOrderExecutor = new Map();
@@ -131,6 +135,7 @@ async function pendingOrders() {
   }
 }
 
+// ? Square Off Order <> Place
 const squareOffOrder = async (req, res) => {
   try {
     const order = await squareOffOrderLib(
@@ -143,6 +148,40 @@ const squareOffOrder = async (req, res) => {
     }
 
     res.status(200).json({ content: order });
+  } catch (error) {
+    res
+      .status(error?.code || 500)
+      .json({ message: error?.message || "Sorry!! Something went wrong." });
+  }
+};
+
+// ? Square Off Order <> Cancel
+const canceSquareOffOrder = async (req, res) => {
+  try {
+    const order = await canceLib(
+      req?.user?.tokenDetails?.unique_token,
+      req.body
+    );
+
+    await removeOrderFromMap(order, req?.user?.tokenDetails?.unique_token);
+
+    res.status(200).json({ content: order });
+  } catch (error) {
+    res
+      .status(error?.code || 500)
+      .json({ message: error?.message || "Sorry!! Something went wrong." });
+  }
+};
+
+// ? Square Off Order <> Cancel
+const listSquareOffOrders = async (req, res) => {
+  try {
+    const orders = await listLib(
+      req?.user?.tokenDetails?.unique_token,
+      req.body
+    );
+
+    res.status(200).json({ content: orders });
   } catch (error) {
     res
       .status(error?.code || 500)
@@ -304,7 +343,7 @@ async function removeOrderFromMap(order, user_token) {
       successOrderDataEmitter?.set(symbol_token, webSockets);
     }
 
-    let orders = successOrderExecutor.get(symbol_token);
+    let orders = successOrderExecutor.get(symbol_token) || [];
     orders = orders.filter(
       (object) => object.order_token !== order?.order_token
     );
@@ -337,4 +376,4 @@ subscribeToTicks(channelData);
 
 init();
 
-module.exports = { squareOffOrder };
+module.exports = { squareOffOrder, canceSquareOffOrder, listSquareOffOrders };

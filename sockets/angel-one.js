@@ -59,7 +59,7 @@ function websocketInit(auth) {
       socket.fetchData(object);
       socket.on("tick", function (data) {
         const now = moment().tz("Asia/Kolkata");
-        if (now.isAfter(cutoffTime)) {
+        if (true) {
           setInterval(function () {
             const randomValue = Math.floor(Math.random() * 41) - 20;
             const last_traded_price = (

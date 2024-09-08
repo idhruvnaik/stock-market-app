@@ -147,7 +147,8 @@ module.exports = (sequelize, DataTypes) => {
       throw new Error("User not found!!!");
     }
 
-    const total_price = userOrder.quantity * userOrder.reference_price;
+    const total_price =
+      userOrder.lot_size * userOrder.quantity * userOrder.reference_price;
     if (user.balance < total_price) {
       throw new Error("Insufficient balance!!!");
     }
