@@ -101,7 +101,7 @@ module.exports = (sequelize, DataTypes) => {
           });
 
           if (order.changed("trigger_price")) {
-            order.total_price = await updateTotalPrice(userOrder);
+            order.total_price = await updateTotalPrice(order);
           }
 
           const previousStatus = order.previous("status");

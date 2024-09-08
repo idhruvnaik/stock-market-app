@@ -232,13 +232,18 @@ async function monitorUserOrders(integerNumber, data) {
 async function executeUserOrder(order, price) {
   try {
     if (order) {
-      await order.update({ trigger_price: price });
-      await removeOrderFromMap(order, order?.user_token);
-      const ws = await getWs(order?.user_token);
+      await order.update({
+        trigger_price: price,
+        status: constants.ORDER.STATUS.SUCCESS,
+      });
+
+      await removeOrderFromMap(order, order?.user_order?.user_token);
+      const ws = await getWs(order?.user_order?.user_token);
+
       if (ws) {
         ws.send(
           JSON.stringify({
-            order_token: order?.order_token,
+            square_off_order_token: order?.square_off_order_token,
             status: order?.status,
             mode: order?.mode,
             state: order?.state,
