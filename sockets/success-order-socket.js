@@ -10,6 +10,7 @@ const {
   squareOffOrderLib,
   canceLib,
   listLib,
+  updateOrderLib,
 } = require("../lib/order/success");
 
 let successOrderDataEmitter = new Map();
@@ -173,7 +174,7 @@ const canceSquareOffOrder = async (req, res) => {
   }
 };
 
-// ? Square Off Order <> Cancel
+// ? Square Off Order <> List
 const listSquareOffOrders = async (req, res) => {
   try {
     const orders = await listLib(
@@ -182,6 +183,31 @@ const listSquareOffOrders = async (req, res) => {
     );
 
     res.status(200).json({ content: orders });
+  } catch (error) {
+    res
+      .status(error?.code || 500)
+      .json({ message: error?.message || "Sorry!! Something went wrong." });
+  }
+};
+
+// ? Square Off Order <> Update
+const updateOrder = async (req, res) => {
+  try {
+    const order = await updateOrderLib(req.body);
+
+    if (
+      order?.status == constants.ORDER.STATUS.PENDING &&
+      order?.mode == constants.ORDER.MODE.LIMIT
+    ) {
+      await updateOrderMap(order);
+    } else if (
+      order?.status == constants.ORDER.STATUS.SUCCESS &&
+      order?.mode == constants.ORDER.MODE.MARKET
+    ) {
+      await removeOrderFromMap(order, order?.user_order?.user_token);
+    }
+
+    res.status(200).json({ content: order });
   } catch (error) {
     res
       .status(error?.code || 500)
@@ -359,18 +385,20 @@ async function removeOrderFromMap(order, user_token) {
 }
 
 // ? Update Order Map
-async function updateOrderMap(order, user_token) {
+async function updateOrderMap(order) {
   try {
-    const symbol_token = parseInt(order?.symbol_token);
-    let orders = pendingOrderExecutor.get(symbol_token);
+
+    const symbol_token = parseInt(order?.user_order?.symbol_token);
+    let orders = successOrderExecutor.get(symbol_token);
 
     if (orders.length > 0) {
       orders = orders?.filter(
-        (object) => object.order_token !== order?.order_token
+        (object) =>
+          object.square_off_order_token !== order?.square_off_order_token
       );
 
       orders.push(order);
-      pendingOrderExecutor?.set(symbol_token, orders);
+      successOrderExecutor?.set(symbol_token, orders);
     }
   } catch (error) {
     throw error;
@@ -378,7 +406,11 @@ async function updateOrderMap(order, user_token) {
 }
 
 subscribeToTicks(channelData);
-
 init();
 
-module.exports = { squareOffOrder, canceSquareOffOrder, listSquareOffOrders };
+module.exports = {
+  squareOffOrder,
+  canceSquareOffOrder,
+  listSquareOffOrders,
+  updateOrder,
+};
