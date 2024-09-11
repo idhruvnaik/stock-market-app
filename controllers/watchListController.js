@@ -1,7 +1,9 @@
 const db = require("../models");
+const { ltpData } = require("../lib/angel-one");
 
 const list = async (req, res) => {
   try {
+    let response = [];
     const unique_token = req?.user?.tokenDetails?.unique_token;
     const user = await db.User.findOne({
       where: { unique_token },
@@ -13,7 +15,28 @@ const list = async (req, res) => {
       ],
       order: [["watchlist", "order", "ASC"]],
     });
-    res.status(200).json({ watchlist: user?.watchlist });
+
+    const tokens = user?.watchlist?.map((item) => item?.symbol_token);
+    const object = await ltpData(tokens);
+    let lastTradedPrices = [];
+    if (object?.status) {
+      lastTradedPrices = object?.data?.fetched;
+    }
+
+    for (const watchlist of user.watchlist) {
+      const ltpData = await lastTradedPrices.find(
+        (price) => price?.symbolToken === watchlist?.symbol_token
+      );
+
+      response.push({
+        symbol: watchlist?.symbol,
+        symbol_token: watchlist?.symbol_token,
+        symbol_raw_data: watchlist?.symbol_raw_data,
+        last_traded_price: ltpData?.ltp || 0,
+      });
+    }
+
+    res.status(200).json({ watchlist: response });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
