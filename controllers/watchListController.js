@@ -33,6 +33,7 @@ const list = async (req, res) => {
         symbol_token: watchlist?.symbol_token,
         symbol_raw_data: watchlist?.symbol_raw_data,
         last_traded_price: ltpData?.ltp || 0,
+        order: watchlist?.order,
       });
     }
 
