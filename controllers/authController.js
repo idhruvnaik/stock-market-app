@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const db = require("../models");
 const tokens = require("../utils/tokenUtil");
 const constants = require("../config/constants");
+const moment = require("moment");
 
 const register = async (req, res) => {
   try {
@@ -18,6 +19,8 @@ const login = async (req, res) => {
   try {
     const { username, password } = req.body;
     const user = await db.User.findOne({ where: { username } });
+    const ipAddress =
+      req.headers["x-forwarded-for"] || req.connection.remoteAddress;
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -29,6 +32,8 @@ const login = async (req, res) => {
 
     const { accessToken } = await tokens.generateAccessToken(user);
     const { refreshToken } = await tokens.generateRefreshToken(user);
+
+    await loginHistory(user, req.body, ipAddress);
 
     res.json({
       accessToken: accessToken,
@@ -57,5 +62,15 @@ const verifyRefreshToken = async (req, res) => {
     res.status(401).json({ message: error.message });
   }
 };
+
+async function loginHistory(user, params, ipAddress) {
+  const history = await db.LoginHistory.create({
+    user_token: user.unique_token,
+    login_time: moment.now(),
+    ip_address: ipAddress,
+    device_name: params?.device_name,
+    operating_system: params?.operating_system,
+  });
+}
 
 module.exports = { register, login, verifyRefreshToken };

@@ -154,4 +154,21 @@ const list = async (req, res) => {
   }
 };
 
-module.exports = { profile, create, update, list };
+const login_history = async (req, res) => {
+  try {
+    const histories = await db.LoginHistory.findAll({
+      where: {
+        user_token: req?.user?.tokenDetails?.unique_token,
+      },
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).json({ histories: histories });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", details: error.message });
+  }
+};
+
+module.exports = { profile, create, update, list, login_history };
