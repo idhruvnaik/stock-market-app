@@ -387,7 +387,6 @@ async function removeOrderFromMap(order, user_token) {
 // ? Update Order Map
 async function updateOrderMap(order) {
   try {
-
     const symbol_token = parseInt(order?.user_order?.symbol_token);
     let orders = successOrderExecutor.get(symbol_token);
 
