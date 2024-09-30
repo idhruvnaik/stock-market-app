@@ -4,16 +4,16 @@ const tokens = require("../utils/tokenUtil");
 const constants = require("../config/constants");
 const moment = require("moment");
 
-// const register = async (req, res) => {
-//   try {
-//     const { username, password, email, first_name, last_name } = req.body;
-//     const hashedPassword = await bcrypt.hash(password, 10);
-//     const user = await db.User.create({ username, password: hashedPassword });
-//     res.status(201).json({ user: { unique_token: user?.unique_token } });
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// };
+const register = async (req, res) => {
+  try {
+    const { username, password, email, first_name, last_name } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await db.User.create({ username, password: hashedPassword, first_name: first_name, last_name: last_name, email: email });
+    res.status(201).json({ user: { unique_token: user?.unique_token } });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 
 const login = async (req, res) => {
   try {
@@ -73,4 +73,4 @@ async function loginHistory(user, params, ipAddress) {
   });
 }
 
-module.exports = { login, verifyRefreshToken };
+module.exports = { login, verifyRefreshToken, register };
