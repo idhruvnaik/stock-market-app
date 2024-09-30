@@ -37,10 +37,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DOUBLE,
         allowNull: false,
       },
-      lot_size: {
-        type: DataTypes.DOUBLE,
-        allowNull: false,
-      },
       reference_price: {
         type: DataTypes.DOUBLE,
         allowNull: false,
@@ -84,6 +80,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         beforeSave: async (userOrder, options) => {
           if (userOrder.changed("trigger_price")) {
+            await deductBalanceFromUserAfterSuccess(userOrder, options);
             userOrder.total_price = await updateTotalPrice(userOrder);
             // ? Change status of Order to Success if total price is set
             if (
@@ -137,7 +134,7 @@ module.exports = (sequelize, DataTypes) => {
     return token;
   }
 
-  // ? Deduct balance from user
+  // ? Deduct balance from user - Based On Reference Price
   async function deductBalanceFromUser(userOrder, options) {
     const user = await sequelize.models.User.findOne({
       where: { unique_token: userOrder.user_token },
@@ -147,25 +144,51 @@ module.exports = (sequelize, DataTypes) => {
       throw new Error("User not found!!!");
     }
 
-    const total_price =
-      userOrder.lot_size * userOrder.quantity * userOrder.reference_price;
+    let total_price = 0;
+    if (userOrder.mode == constants.ORDER.MODE.MARKET) {
+      total_price = userOrder.quantity * userOrder.trigger_price;
+    } else {
+      total_price = userOrder.quantity * userOrder.reference_price;
+    }
+
     if (user.balance < total_price) {
-      throw new Error("Insufficient balance!!!");
+      throw new Error(
+        "Insufficient balance!!! (Balance required: " +
+          total_price +
+          ", Current Balance: " +
+          user.balance +
+          ")"
+      );
     }
 
     user.balance -= total_price;
     await user.save({ transaction: options.transaction });
   }
 
+  // ? Deduct balance from user - Based On Trigger Price
+  async function deductBalanceFromUserAfterSuccess(userOrder, options) {
+    const user = await sequelize.models.User.findOne({
+      where: { unique_token: userOrder.user_token },
+    });
+
+    if (!user) {
+      throw new Error("User not found!!!");
+    }
+
+    let total_price = 0;
+    if (userOrder.mode == constants.ORDER.MODE.LIMIT) {
+      total_price = userOrder.quantity * userOrder.reference_price;
+      user.balance += total_price;
+
+      user.balance -= userOrder.quantity * userOrder.trigger_price;
+    }
+
+    await user.save({ transaction: options.transaction });
+  }
+
   // ? Calculate the total price
   async function updateTotalPrice(userOrder) {
-    return (
-      (
-        userOrder.lot_size *
-        userOrder.quantity *
-        userOrder.trigger_price
-      ).toFixed(2) || 0
-    );
+    return (userOrder.quantity * userOrder.trigger_price).toFixed(2) || 0;
   }
 
   // ? Rules <> Order

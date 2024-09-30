@@ -144,11 +144,6 @@ async function monitorUserOrders(integerNumber, data) {
           parseFloat(data?.last_traded_price) / 100
         ).toFixed(2);
 
-        if (order?.user_token == "69c0b14e-bb04-433f-b916-15ca4a76a835") {
-          console.log(last_traded_price);
-          console.log(order?.reference_price);
-        }
-
         if (
           (last_traded_price <= order?.reference_price &&
             order?.state == constants.ORDER.STATE.BUY) ||

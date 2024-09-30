@@ -19,10 +19,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DOUBLE,
         allowNull: false,
       },
-      lot_size: {
-        type: DataTypes.DOUBLE,
-        allowNull: false,
-      },
       status: {
         type: DataTypes.ENUM("PENDING", "SUCCESS", "CANCEL"),
         allowNull: false,
@@ -156,8 +152,7 @@ module.exports = (sequelize, DataTypes) => {
       throw new Error("User not found!!!");
     }
 
-    const total_price =
-      order?.lot_size * order?.quantity * order?.trigger_price;
+    const total_price = order?.quantity * order?.trigger_price;
     user.balance += total_price;
     await user.save({ transaction: options.transaction });
   }
@@ -179,9 +174,7 @@ module.exports = (sequelize, DataTypes) => {
 
   // ? Calculate the total price
   async function updateTotalPrice(order) {
-    return (
-      (order.lot_size * order.quantity * order.trigger_price).toFixed(2) || 0
-    );
+    return (order.quantity * order.trigger_price).toFixed(2) || 0;
   }
 
   return SquareOffOrder;
