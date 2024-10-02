@@ -24,6 +24,7 @@ module.exports = {
     WATCHLIST: 8080,
     PENDING_ORDER: 8081,
     SUCCESS_ORDER: 8082,
+    PORTFOLIO: 8083,
   },
   ROLE: {
     ADMIN: "ADMIN",

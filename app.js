@@ -8,6 +8,7 @@ const jobRoutes = require("./routes/jobRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const squareOffRoutes = require("./routes/squareOffRoutes");
 const angelOneRoutes = require("./routes/angelOneRoutes");
+const portfolioSocket = require("./sockets/portfolio-socket");
 
 const constants = require("./config/constants");
 const errorMiddleware = require("./middlewares/errorMiddleware");
