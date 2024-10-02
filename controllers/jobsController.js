@@ -3,6 +3,7 @@ const moment = require("moment");
 const constants = require("../config/constants");
 
 const todayDate = moment().format("YYYY-MM-DD");
+
 const importSymbols = async (req, res) => {
   try {
     const t = await db.sequelize.transaction();
