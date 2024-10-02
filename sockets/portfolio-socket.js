@@ -71,7 +71,6 @@ async function channelData(data) {
 
       if (portfolioOrder.has(integerNumber)) {
         const clients = portfolioOrder.get(integerNumber);
-        console.log(clients.length);
         if (clients.length > 0) {
           clients?.forEach((wsClient) => {
             data.token = integerNumber || data?.token;
@@ -89,6 +88,17 @@ function generateUniqueToken() {
   const uuid = uuidv4();
   const timestamp = Date.now().toString(36);
   return `${uuid}-${timestamp}`;
+}
+
+// !! Function to remove WebSocket from the map
+async function removeWebSocket(ws) {
+  for (const [token, sockets] of portfolioOrder) {
+    const updatedSockets = sockets?.filter((socket) => socket.id !== ws.id);
+
+    if (updatedSockets?.length !== sockets?.length) {
+      portfolioOrder.set(token, updatedSockets);
+    }
+  }
 }
 
 subscribeToTicks(channelData);
